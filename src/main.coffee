@@ -90,7 +90,6 @@ class Vim
             re = new RegExp('('+@searchString+')', 'gm')
             result = result.replace(re, '<span class="highlighted">$1</span>')
 
-        r = syntax.html(result)
         @$editor.innerHTML = result
 
         cursorContainerHtml = []
