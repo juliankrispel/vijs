@@ -9021,7 +9021,7 @@ Vim = (function() {
   }
 
   Vim.prototype.render = function(x, y) {
-    var cursorContainerHtml, i, l, r, re, result, _i, _len, _ref;
+    var cursorContainerHtml, i, l, re, result, _i, _len, _ref;
     if (x == null) {
       x = this.x;
     }
@@ -9033,7 +9033,6 @@ Vim = (function() {
       re = new RegExp('(' + this.searchString + ')', 'gm');
       result = result.replace(re, '<span class="highlighted">$1</span>');
     }
-    r = syntax.html(result);
     this.$editor.innerHTML = result;
     cursorContainerHtml = [];
     _ref = this.lines;
