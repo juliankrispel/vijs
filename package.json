@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.html",
   "dependencies": {
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "highlight.js": "~8.0.0",
+    "lex": "~1.7.5"
   },
   "devDependencies": {
     "gulp": "~3.6.0",

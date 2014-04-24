@@ -1396,6 +1396,155 @@ process.chdir = function (dir) {
 }).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/..\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js","/..\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process")
 },{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],5:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+if (typeof module === "object" && typeof module.exports === "object") module.exports = Lexer;
+
+Lexer.defunct = function (char) {
+    throw new Error("Unexpected character at index " + (this.index - 1) + ": " + char);
+};
+
+function Lexer(defunct) {
+    if (typeof defunct !== "function") defunct = Lexer.defunct;
+
+    var tokens = [];
+    var rules = [];
+    var remove = 0;
+    this.state = 0;
+    this.index = 0;
+    this.input = "";
+
+    this.addRule = function (pattern, action, start) {
+        var global = pattern.global;
+
+        if (!global) {
+            var flags = "g";
+            if (pattern.multiline) flags += "m";
+            if (pattern.ignoreCase) flags += "i";
+            pattern = new RegExp(pattern.source, flags);
+        }
+
+        if (Object.prototype.toString.call(start) !== "[object Array]") start = [0];
+
+        rules.push({
+            pattern: pattern,
+            global: global,
+            action: action,
+            start: start
+        });
+
+        return this;
+    };
+
+    this.setInput = function (input) {
+        remove = 0;
+        this.state = 0;
+        this.index = 0;
+        this.input = input;
+        return this;
+    };
+
+    this.lex = function () {
+        if (tokens.length) return tokens.shift();
+
+        this.reject = true;
+
+        while (this.index <= this.input.length) {
+            var matches = scan.call(this).splice(remove);
+            var index = this.index;
+
+            while (matches.length) {
+                if (this.reject) {
+                    var match = matches.shift();
+                    var result = match.result;
+                    var length = match.length;
+                    this.index += length;
+                    this.reject = false;
+                    remove++;
+
+                    var token = match.action.apply(this, result);
+                    if (this.reject) this.index = result.index;
+                    else if (typeof token !== "undefined") {
+                        switch (Object.prototype.toString.call(token)) {
+                        case "[object Array]":
+                            tokens = token.slice(1);
+                            token = token[0];
+                        default:
+                            if (length) remove = 0;
+                            return token;
+                        }
+                    }
+                } else break;
+            }
+
+            var input = this.input;
+
+            if (index < input.length) {
+                if (this.reject) {
+                    remove = 0;
+                    var token = defunct.call(this, input.charAt(this.index++));
+                    if (typeof token !== "undefined") {
+                        if (Object.prototype.toString.call(token) === "[object Array]") {
+                            tokens = token.slice(1);
+                            return token[0];
+                        } else return token;
+                    }
+                } else {
+                    if (this.index !== index) remove = 0;
+                    this.reject = true;
+                }
+            } else if (matches.length)
+                this.reject = true;
+            else break;
+        }
+    };
+
+    function scan() {
+        var matches = [];
+        var index = 0;
+
+        var state = this.state;
+        var lastIndex = this.index;
+        var input = this.input;
+
+        for (var i = 0, length = rules.length; i < length; i++) {
+            var rule = rules[i];
+            var start = rule.start;
+            var states = start.length;
+
+            if ((!states || start.indexOf(state) >= 0) ||
+                (state % 2 && states === 1 && !start[0])) {
+                var pattern = rule.pattern;
+                pattern.lastIndex = lastIndex;
+                var result = pattern.exec(input);
+
+                if (result && result.index === lastIndex) {
+                    var j = matches.push({
+                        result: result,
+                        action: rule.action,
+                        length: result[0].length
+                    });
+
+                    if (rule.global) index = j;
+
+                    while (--j > index) {
+                        var k = j - 1;
+
+                        if (matches[j].length > matches[k].length) {
+                            var temple = matches[j];
+                            matches[j] = matches[k];
+                            matches[k] = temple;
+                        }
+                    }
+                }
+            }
+        }
+
+        return matches;
+    }
+}
+
+}).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/..\\node_modules\\lex\\lexer.js","/..\\node_modules\\lex")
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],6:[function(require,module,exports){
+(function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 /**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -8183,7 +8332,7 @@ process.chdir = function (dir) {
 }.call(this));
 
 }).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/..\\node_modules\\lodash\\dist\\lodash.js","/..\\node_modules\\lodash\\dist")
-},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],6:[function(require,module,exports){
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],7:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
 /*
@@ -8709,7 +8858,7 @@ if (typeof module !== "undefined" && module !== null) {
 }
 
 }).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/..\\node_modules\\tiny-rx\\dist\\trx.js","/..\\node_modules\\tiny-rx\\dist")
-},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],7:[function(require,module,exports){
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],8:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 module.exports = {
   esc: 27,
@@ -8722,9 +8871,9 @@ module.exports = {
 
 
 }).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/keys.coffee","/")
-},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],8:[function(require,module,exports){
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}],9:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
-var Vim, get, keyHelper, keys, trx, _,
+var Vim, get, keyHelper, keys, syntax, trx, u, _,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 get = function(arr, index) {
@@ -8749,7 +8898,11 @@ if (!window.requestAnimationFrame) {
   };
 }
 
+syntax = require('./syntax');
+
 trx = require('tiny-rx');
+
+u = require('./util');
 
 _ = require('lodash');
 
@@ -8868,7 +9021,7 @@ Vim = (function() {
   }
 
   Vim.prototype.render = function(x, y) {
-    var cursorContainerHtml, i, l, re, result, _i, _len, _ref;
+    var cursorContainerHtml, i, l, r, re, result, _i, _len, _ref;
     if (x == null) {
       x = this.x;
     }
@@ -8880,6 +9033,7 @@ Vim = (function() {
       re = new RegExp('(' + this.searchString + ')', 'gm');
       result = result.replace(re, '<span class="highlighted">$1</span>');
     }
+    r = syntax.html(result);
     this.$editor.innerHTML = result;
     cursorContainerHtml = [];
     _ref = this.lines;
@@ -8907,14 +9061,15 @@ Vim = (function() {
   };
 
   Vim.prototype.insert = function(val) {
-    var i, l, line, lines, splitLine, _i, _len;
+    var i, l, line, lines, splitLine, y, _i, _len;
     line = this.lines[this.y];
     splitLine = (line.substr(0, this.x) + val + line.substr(this.x)).split('\n');
     lines = this.lines;
     lines.splice(this.y, 1);
+    y = this.y;
     for (i = _i = 0, _len = splitLine.length; _i < _len; i = ++_i) {
       l = splitLine[i];
-      lines.splice(this.y += i, 0, l);
+      lines.splice(y + i, 0, l);
     }
     this.lines = lines;
     if (!(splitLine.length > 1)) {
@@ -8964,7 +9119,7 @@ Vim = (function() {
         y++;
         line = this.lines[y];
         results = regex.exec(line);
-        if (results.length > 0) {
+        if (results && results.length > 0) {
           this.x = 0;
           this.y++;
         }
@@ -9106,7 +9261,6 @@ Vim = (function() {
     }).subscribe(function() {
       self.x = 0;
       self.insert('\n');
-      self.y--;
       return self.mode = 'input';
     });
     this.inputEvents.filter(function() {
@@ -9132,10 +9286,10 @@ Vim = (function() {
     this.keydownEvents.filter(function(key) {
       return self.mode === 'input' && key === 'enter';
     }).subscribe(function() {
+      console.log('enter');
       self.insert('\n');
-      this.y--;
-      self.gotoStart();
-      return this.y++;
+      self.y++;
+      return self.gotoStart();
     });
     this.keydownEvents.filter(function(key) {
       return key === 'esc';
@@ -9145,19 +9299,15 @@ Vim = (function() {
       }
       return self.mode = 'visual';
     });
-    this.keydownEvents.filter(function() {
-      return self.mode === 'visual';
-    }).filter(function(key) {
-      return key === 'enter';
+    this.keydownEvents.filter(function(key) {
+      return self.mode === 'visual' && key === 'enter';
     }).subscribe(function() {
       self.x = 0;
       self.y++;
       return self.nextWord();
     });
     this.keydownEvents.filter(function(key) {
-      return key === 'del';
-    }).filter(function() {
-      return self.mode === 'search';
+      return key === 'del' && self.mode === 'search';
     }).subscribe(function() {
       return self.searchString = self.searchString.substr(0, self.searchString.length - 1);
     });
@@ -9200,4 +9350,57 @@ new Vim;
 
 
 }).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/main.coffee","/")
-},{"./keys":7,"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1,"lodash":5,"tiny-rx":6}]},{},[8])
+},{"./keys":8,"./syntax":10,"./util":11,"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1,"lodash":6,"tiny-rx":7}],10:[function(require,module,exports){
+(function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+var Lexer, lexer, tags, words;
+
+Lexer = require('lex');
+
+words = 0;
+
+tags = 0;
+
+lexer = new Lexer;
+
+lexer.addRule(/\w/, function(char) {
+  return words++;
+});
+
+lexer.addRule(/<[-_a-zA-Z]*>/, function(char) {
+  return tags++;
+}, []);
+
+module.exports = {
+  html: function(text) {
+    lexer.input = text;
+    return lexer.lex();
+  }
+};
+
+
+}).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/syntax.coffee","/")
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1,"lex":5}],11:[function(require,module,exports){
+(function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+module.exports = {
+  escape: function(str) {
+    var div;
+    div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  },
+  unescape: function(escapedStr) {
+    var child, div;
+    div = document.createElement('div');
+    div.innerHTML = escapedStr;
+    child = div.childNodes[0];
+    if (child.nodeValue) {
+      return child;
+    } else {
+      return '';
+    }
+  }
+};
+
+
+}).call(this,require("C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/util.coffee","/")
+},{"C:\\projects\\vimjs\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":4,"buffer":1}]},{},[9])

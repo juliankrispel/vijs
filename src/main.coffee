@@ -16,7 +16,9 @@ unless window.requestAnimationFrame
     lastTime = currTime + timeToCall
     id
 
+syntax = require('./syntax')
 trx = require('tiny-rx')
+u = require('./util')
 _ = require('lodash')
 keyHelper = require('./keys')
 keys = require('./keys')
@@ -82,11 +84,13 @@ class Vim
         @init()
 
     render:(x = @x,y = @y) =>
-
         result = @lines.join('\n')
+
         if(@searchString.length > 0)
             re = new RegExp('('+@searchString+')', 'gm')
             result = result.replace(re, '<span class="highlighted">$1</span>')
+
+        r = syntax.html(result)
         @$editor.innerHTML = result
 
         cursorContainerHtml = []
@@ -109,9 +113,9 @@ class Vim
         splitLine = (line.substr(0, @x) + val + line.substr(@x)).split('\n')
         lines = @lines
         lines.splice(@y,1)
-
+        y = @y
         for l,i in splitLine
-            lines.splice(@y+=i, 0, l)
+            lines.splice(y+i, 0, l)
         @lines = lines
         @x++ unless splitLine.length > 1
         @render()
@@ -148,7 +152,7 @@ class Vim
                 y++
                 line = @lines[y]
                 results = regex.exec(line)
-                if(results.length > 0)
+                if(results && results.length > 0)
                     @x=0
                     @y++
             
@@ -283,7 +287,6 @@ class Vim
         ).subscribe(()->
             self.x=0
             self.insert('\n')
-            self.y--
             self.mode = 'input'
         )
 
@@ -313,12 +316,12 @@ class Vim
             self.delete()
         )
 
-        #NEW LINE ABOVE - O
+        #NEW LINEBREAK - ENTER
         @keydownEvents.filter((key)-> self.mode == 'input' && key == 'enter').subscribe(()->
+            console.log 'enter'
             self.insert('\n')
-            @y--
+            self.y++
             self.gotoStart()
-            @y++
         )
 
         #ESCAPE
@@ -330,9 +333,9 @@ class Vim
             self.mode = 'visual'
         )
 
+        #ENTER VISUAL
         @keydownEvents
-            .filter(()-> self.mode == 'visual')
-            .filter((key)-> key == 'enter')
+            .filter((key)-> self.mode == 'visual' && key == 'enter')
             .subscribe(()-> 
                 self.x = 0
                 self.y++
@@ -340,13 +343,12 @@ class Vim
             )
 
         @keydownEvents
-            .filter((key)-> key == 'del')
-            .filter(()-> self.mode == 'search')
+            .filter((key)-> key == 'del' && self.mode == 'search')
             .subscribe(()->
                 self.searchString = self.searchString.substr(0, self.searchString.length-1)
             )
 
-        #change searchstring when typing in while 
+        #change searchstring while typing
         @inputEvents.filter(()-> self.mode == 'search').subscribe((e)->
             self.searchString += e.char if e.char
         )
