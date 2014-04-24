@@ -1,0 +1,30 @@
+{
+  "name": "vijs",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.html",
+  "dependencies": {
+    "lodash": "~2.4.1"
+  },
+  "devDependencies": {
+    "gulp": "~3.6.0",
+    "gulp-watch": "~0.5.3",
+    "gulp-coffee": "~1.4.1",
+    "gulp-uglify": "~0.2.1",
+    "gulp-rename": "~1.2.0",
+    "gulp-util": "~2.2.14",
+    "gulp-plumber": "~0.5.6",
+    "gulp-browserify": "~0.5.0",
+    "gulp-connect": "~2.0.5"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/juliankrispel/tiny-rx.git"
+  },
+  "author": "Julian Krispel-Samsel <juliankrispel@yahoo.de> (http://goodafternoon.co/)",
+  "license": "ISC",
+  "homepage": "https://github.com/juliankrispel/vijs"
+}
